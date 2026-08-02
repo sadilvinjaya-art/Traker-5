@@ -1,0 +1,1211 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>365-Day Work & Marks Tracker</title>
+  
+  <!-- Custom App Icons -->
+  <link rel="apple-touch-icon" href="images.png">
+  <link rel="icon" type="image/png" href="images.png">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="mobile-web-app-capable" content="yes">
+
+  <!-- Chart.js CDN -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      max-width: 1400px;
+      margin: 20px auto;
+      padding: 20px;
+      background-color: #f8f9fa;
+    }
+    h2, h3 {
+      color: #333;
+    }
+
+    /* Countdown Banner Styling */
+    .countdown-banner {
+      background: #1a1a1a;
+      color: #ffffff;
+      padding: 20px;
+      border-radius: 8px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+      margin-bottom: 25px;
+      text-align: center;
+    }
+    .countdown-banner h3 {
+      color: #00adb5;
+      margin-top: 0;
+      margin-bottom: 15px;
+      font-size: 1.2rem;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+    .countdown-container {
+      display: flex;
+      justify-content: center;
+      gap: 15px;
+      flex-wrap: wrap;
+    }
+    .time-box {
+      background-color: #2b2b2b;
+      padding: 12px 18px;
+      border-radius: 8px;
+      min-width: 75px;
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2);
+    }
+    .time-box .number {
+      font-size: 2rem;
+      font-weight: bold;
+      color: #00adb5;
+      line-height: 1;
+    }
+    .time-box .label {
+      font-size: 0.75rem;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      color: #aaaaaa;
+      margin-top: 6px;
+    }
+
+    /* Duolingo-Style Striker / Streak Section Styling */
+    .striker-section {
+      background: #131f24;
+      border-radius: 12px;
+      padding: 25px 20px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+      margin-bottom: 25px;
+      text-align: center;
+      color: #ffffff;
+    }
+    .streak-display-main {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      margin-bottom: 15px;
+    }
+    .flame-icon {
+      font-size: 48px;
+      line-height: 1;
+      margin-bottom: 5px;
+      animation: pulseFlame 1.5s infinite ease-in-out alternate;
+    }
+    @keyframes pulseFlame {
+      from { transform: scale(1); filter: drop-shadow(0 0 5px #ffb300); }
+      to { transform: scale(1.1); filter: drop-shadow(0 0 15px #ff8800); }
+    }
+    .streak-big-number {
+      font-size: 3.5rem;
+      font-weight: 900;
+      color: #ffc107;
+      line-height: 1;
+      letter-spacing: 1px;
+    }
+    .streak-label-text {
+      font-size: 1.1rem;
+      font-weight: bold;
+      color: #ffc107;
+      text-transform: lowercase;
+      margin-bottom: 15px;
+    }
+    .striker-sub-title {
+      color: #839d9a;
+      font-size: 13px;
+      margin-bottom: 15px;
+      font-weight: bold;
+      letter-spacing: 0.5px;
+    }
+    .striker-balls-container {
+      display: flex;
+      gap: 12px;
+      overflow-x: auto;
+      padding: 12px 5px;
+      align-items: center;
+      justify-content: flex-start;
+    }
+    .striker-ball-item {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      flex-shrink: 0;
+    }
+    .striker-ball {
+      width: 62px;
+      height: 62px;
+      border-radius: 50%;
+      background: #2b383f;
+      border: 3px solid #3c4d55;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      color: #8096a0;
+      font-size: 10px;
+      font-weight: bold;
+      transition: all 0.3s ease;
+      position: relative;
+    }
+    /* Default Pending / Unignited Ball */
+    .striker-ball.pending {
+      background: #202b30;
+      border-color: #2c3a40;
+      color: #586e75;
+    }
+    /* Ignited Yellow Flame Ball upon task completion */
+    .striker-ball.active {
+      background: linear-gradient(135deg, #ffca28, #ff9800);
+      border-color: #ffd54f;
+      color: #212121;
+      box-shadow: 0 0 12px rgba(255, 193, 7, 0.6);
+      transform: scale(1.05);
+    }
+    
+    /* ICE BALL FOR MISSED DAYS */
+    .striker-ball.missed {
+      background: radial-gradient(circle at 35% 35%, #e0f7fa, #00b0ff 60%, #006064 100%);
+      border: 3px solid #b2ebf2;
+      color: #ffffff;
+      box-shadow: 0 0 12px rgba(0, 229, 255, 0.7), inset 0 0 8px rgba(255, 255, 255, 0.8);
+      text-shadow: 0 1px 3px rgba(0, 0, 0, 0.6);
+    }
+    .striker-ball.missed .status-icon {
+      font-size: 16px;
+      filter: drop-shadow(0 0 2px #e0f7fa);
+    }
+
+    .striker-ball .status-icon {
+      font-size: 14px;
+      font-weight: bold;
+      margin-bottom: 2px;
+    }
+    .striker-ball .date-text {
+      line-height: 1;
+      text-align: center;
+      font-size: 9px;
+    }
+
+    /* Fixed Container Dimensions for Chart */
+    .chart-box {
+      background: #fff;
+      padding: 20px;
+      border-radius: 8px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+      margin-bottom: 30px;
+      min-height: 420px;
+      height: 420px;
+      position: relative;
+      width: 100%;
+      box-sizing: border-box;
+      overflow: hidden;
+    }
+    .chart-container-inner {
+      position: relative;
+      width: 100%;
+      height: 350px;
+      min-height: 350px;
+    }
+
+    .table-container {
+      max-height: 500px;
+      overflow-y: auto;
+      background: #fff;
+      border-radius: 8px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+      margin-bottom: 30px;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      text-align: center;
+    }
+    th, td {
+      padding: 10px;
+      border: 1px solid #e0e0e0;
+    }
+    th {
+      background-color: #007bff;
+      color: white;
+      position: sticky;
+      top: 0;
+      z-index: 10;
+    }
+    tr:nth-child(even) {
+      background-color: #f9f9f9;
+    }
+    .works-grid {
+      display: grid;
+      grid-template-columns: repeat(10, 1fr);
+      gap: 6px;
+      max-width: 1100px;
+      margin: 0 auto;
+    }
+    .work-item {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: space-between;
+      font-size: 10px;
+      background: #f0f4f8;
+      padding: 6px 4px;
+      border-radius: 4px;
+      min-height: 58px;
+      text-align: center;
+      border: 1px solid #d0d7de;
+    }
+    .work-item span.title {
+      line-height: 1.2;
+      font-weight: 600;
+    }
+    .work-item span.pts {
+      font-size: 9px;
+      color: #28a745;
+      font-weight: bold;
+      margin-top: 2px;
+    }
+    .work-item input {
+      cursor: pointer;
+      margin-top: 4px;
+    }
+    .score-cell {
+      font-weight: bold;
+      color: #007bff;
+      font-size: 16px;
+    }
+    .reset-btn {
+      background-color: #dc3545;
+      color: white;
+      border: none;
+      padding: 8px 16px;
+      border-radius: 4px;
+      cursor: pointer;
+      margin-bottom: 15px;
+      float: right;
+    }
+    .reset-btn:hover {
+      background-color: #bd2130;
+    }
+    .date-label {
+      font-size: 12px;
+      line-height: 1.3;
+    }
+
+    /* Scrollable 365 Days Circular Tracker */
+    .days-circle-container {
+      background: #ffffff;
+      border-radius: 8px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+      margin-top: 20px;
+      margin-bottom: 30px;
+      overflow: hidden;
+    }
+    .days-header {
+      background-color: #007bff;
+      color: white;
+      padding: 12px 20px;
+      margin: 0;
+      font-size: 16px;
+      position: sticky;
+      top: 0;
+      z-index: 10;
+    }
+    .days-container-scroll {
+      max-height: 400px;
+      overflow-y: auto;
+      padding: 20px;
+    }
+    .days-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(90px, 1fr));
+      gap: 12px;
+    }
+    .day-badge {
+      width: 90px;
+      height: 90px;
+      border-radius: 50%;
+      background-color: #000000;
+      border: 2px solid #333333;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      padding: 5px;
+      box-sizing: border-box;
+      position: relative;
+      cursor: pointer;
+      user-select: none;
+      transition: transform 0.1s ease;
+    }
+    .day-badge:hover {
+      transform: scale(1.05);
+    }
+    .day-badge .day-num {
+      font-size: 11px;
+      font-weight: bold;
+      color: #ffffff;
+    }
+    .day-badge .day-date {
+      font-size: 9px;
+      color: #ffffff;
+      margin-top: 2px;
+      line-height: 1.1;
+    }
+    .day-badge.crossed::after {
+      content: '✕';
+      position: absolute;
+      font-size: 45px;
+      color: #ffea00;
+      font-weight: bold;
+      line-height: 1;
+      text-shadow: 0 0 4px rgba(0, 0, 0, 0.8);
+    }
+    .day-badge.today {
+      border: 3px solid #ffea00;
+      box-shadow: 0 0 10px rgba(255, 234, 0, 0.6);
+    }
+
+    /* Progress Bars Section Styling */
+    .progress-section {
+      background: #ffffff;
+      border-radius: 8px;
+      padding: 25px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+      margin-top: 30px;
+    }
+    .subject-group {
+      margin-bottom: 25px;
+      padding-bottom: 15px;
+      border-bottom: 1px solid #e0e0e0;
+    }
+    .subject-group h4 {
+      margin: 0 0 15px 0;
+      font-size: 18px;
+      color: #007bff;
+    }
+    .progress-item {
+      margin-bottom: 15px;
+    }
+    .progress-label-container {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 5px;
+      font-size: 14px;
+      font-weight: bold;
+    }
+
+    .progress-controls {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .step-btn {
+      background-color: #007bff;
+      color: #fff;
+      border: none;
+      width: 26px;
+      height: 26px;
+      border-radius: 4px;
+      font-size: 16px;
+      font-weight: bold;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      line-height: 1;
+      user-select: none;
+      transition: background-color 0.15s ease;
+    }
+    .step-btn:hover {
+      background-color: #0056b3;
+    }
+    .step-btn:active {
+      transform: scale(0.95);
+    }
+    .progress-controls input[type="number"] {
+      width: 55px;
+      padding: 3px;
+      font-size: 13px;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+      text-align: center;
+    }
+
+    .progress-bar-outer {
+      width: 100%;
+      height: 22px;
+      background-color: #e9ecef;
+      border-radius: 11px;
+      overflow: hidden;
+      box-shadow: inset 0 1px 3px rgba(0,0,0,0.2);
+      position: relative;
+    }
+    .progress-bar-inner {
+      height: 100%;
+      width: 0%;
+      background-color: #28a745;
+      transition: width 0.3s ease;
+      border-radius: 11px;
+    }
+    .progress-bar-text {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 11px;
+      font-weight: bold;
+      color: #000;
+      text-shadow: 0 0 2px rgba(255,255,255,0.8);
+    }
+    .overall-bar .progress-bar-inner {
+      background-color: #17a2b8;
+    }
+    .main-bar {
+      background-color: #fff3cd;
+      border: 2px solid #ffeba2;
+      padding: 20px;
+      border-radius: 8px;
+    }
+    .main-bar h3 {
+      margin-top: 0;
+      color: #856404;
+    }
+    .main-bar .progress-bar-inner {
+      background-color: #ffc107;
+    }
+  </style>
+</head>
+<body>
+
+  <button class="reset-btn" onclick="resetData()">Reset All Data</button>
+  <h2>📈 365-Day Marks & Work Tracker</h2>
+
+  <!-- 365-Day Countdown Live Clock Banner -->
+  <div class="countdown-banner">
+    <h3>⏳ Time Remaining (365-Day Target Countdown)</h3>
+    <div class="countdown-container">
+      <div class="time-box">
+        <div class="number" id="days">365</div>
+        <div class="label">Days</div>
+      </div>
+      <div class="time-box">
+        <div class="number" id="hours">00</div>
+        <div class="label">Hours</div>
+      </div>
+      <div class="time-box">
+        <div class="number" id="minutes">00</div>
+        <div class="label">Minutes</div>
+      </div>
+      <div class="time-box">
+        <div class="number" id="seconds">00</div>
+        <div class="label">Seconds</div>
+      </div>
+      <div class="time-box">
+        <div class="number" id="milliseconds">000</div>
+        <div class="label">MS</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Duolingo-Style Striker / Streak Section (Between Timer & Chart) -->
+  <div class="striker-section">
+    <div class="streak-display-main">
+      <div class="flame-icon">🔥</div>
+      <div class="streak-big-number" id="consecutiveStreakNum">0</div>
+      <div class="streak-label-text">day streak</div>
+    </div>
+    <div class="striker-sub-title">Complete Bio 1 Page + Phys 5 Qs + Chem 5 Qs daily to ignite your streak!</div>
+    <div class="striker-balls-container" id="strikerContainer">
+      <!-- Dynamically filled automatically after each day ends -->
+    </div>
+  </div>
+  
+  <!-- 1. Permanent Fixed Chart Box -->
+  <div class="chart-box">
+    <h3 style="margin-top: 0;">Daily Marks Progress</h3>
+    <div class="chart-container-inner">
+      <canvas id="marksChart" style="width: 100% !important; height: 350px !important; min-height: 350px !important; display: block;"></canvas>
+    </div>
+  </div>
+
+  <!-- 2. Daily Tasks Table -->
+  <h3>Daily Tasks Checklist (Custom Marks per Task / Max 100)</h3>
+  <div class="table-container">
+    <table>
+      <thead>
+        <tr>
+          <th style="width: 14%;">Date & Day</th>
+          <th>20 Works Checklist</th>
+          <th style="width: 10%;">Total Marks (0-100)</th>
+        </tr>
+      </thead>
+      <tbody id="trackerTableBody">
+        <!-- Generated by JavaScript -->
+      </tbody>
+    </table>
+  </div>
+
+  <!-- 3. 365 Days Circular Tracker -->
+  <div class="days-circle-container">
+    <h3 class="days-header">🟡 365-Day Progress Circles (Scroll & Click to Cross/Uncross)</h3>
+    <div class="days-container-scroll">
+      <div class="days-grid" id="daysGrid">
+        <!-- Generated by JavaScript -->
+      </div>
+    </div>
+  </div>
+
+  <!-- 4. Progress Bars Section -->
+  <div class="progress-section">
+    <h3>📊 Subject Syllabus & Goal Progress Bars</h3>
+
+    <!-- Biology Section -->
+    <div class="subject-group">
+      <h4>🧬 Biology Progress</h4>
+      <div class="progress-item">
+        <div class="progress-label-container">
+          <span>Biology full syllabus, 0-551 pages</span>
+          <div class="progress-controls">
+            <button class="step-btn" onclick="adjustManual('bioPagesManual', -1)">−</button>
+            <input type="number" id="bioPagesManual" min="0" max="551" value="0" onchange="updateProgressBars()">
+            <button class="step-btn" onclick="adjustManual('bioPagesManual', 1)">+</button>
+            <span id="bioPagesText">0 / 551 Pages</span>
+          </div>
+        </div>
+        <div class="progress-bar-outer">
+          <div class="progress-bar-inner" id="bioPagesBar"></div>
+          <div class="progress-bar-text" id="bioPagesPercent">0%</div>
+        </div>
+      </div>
+
+      <div class="progress-item">
+        <div class="progress-label-container">
+          <span>200 essays</span>
+          <div class="progress-controls">
+            <button class="step-btn" onclick="adjustManual('bioEssaysManual', -1)">−</button>
+            <input type="number" id="bioEssaysManual" min="0" max="200" value="0" onchange="updateProgressBars()">
+            <button class="step-btn" onclick="adjustManual('bioEssaysManual', 1)">+</button>
+            <span id="bioEssaysText">0 / 200 Essays</span>
+          </div>
+        </div>
+        <div class="progress-bar-outer">
+          <div class="progress-bar-inner" id="bioEssaysBar"></div>
+          <div class="progress-bar-text" id="bioEssaysPercent">0%</div>
+        </div>
+      </div>
+
+      <div class="progress-item overall-bar">
+        <div class="progress-label-container">
+          <span>Biology 100% A+ sure</span>
+          <span id="bioOverallText">0%</span>
+        </div>
+        <div class="progress-bar-outer">
+          <div class="progress-bar-inner" id="bioOverallBar"></div>
+          <div class="progress-bar-text" id="bioOverallPercent">0%</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Chemistry Section -->
+    <div class="subject-group">
+      <h4>🧪 Chemistry Progress</h4>
+      <div class="progress-item">
+        <div class="progress-label-container">
+          <span>1000 chemistry questions</span>
+          <div class="progress-controls">
+            <button class="step-btn" onclick="adjustManual('chemQuestionsManual', -5)">−</button>
+            <input type="number" id="chemQuestionsManual" min="0" max="1000" value="0" onchange="updateProgressBars()">
+            <button class="step-btn" onclick="adjustManual('chemQuestionsManual', 5)">+</button>
+            <span id="chemQuestionsText">0 / 1000 Questions</span>
+          </div>
+        </div>
+        <div class="progress-bar-outer">
+          <div class="progress-bar-inner" id="chemQuestionsBar"></div>
+          <div class="progress-bar-text" id="chemQuestionsPercent">0%</div>
+        </div>
+      </div>
+
+      <div class="progress-item">
+        <div class="progress-label-container">
+          <span>50 videos</span>
+          <div class="progress-controls">
+            <button class="step-btn" onclick="adjustManual('chemVideosManual', -1)">−</button>
+            <input type="number" id="chemVideosManual" min="0" max="50" value="0" onchange="updateProgressBars()">
+            <button class="step-btn" onclick="adjustManual('chemVideosManual', 1)">+</button>
+            <span id="chemVideosText">0 / 50 Videos</span>
+          </div>
+        </div>
+        <div class="progress-bar-outer">
+          <div class="progress-bar-inner" id="chemVideosBar"></div>
+          <div class="progress-bar-text" id="chemVideosPercent">0%</div>
+        </div>
+      </div>
+
+      <div class="progress-item overall-bar">
+        <div class="progress-label-container">
+          <span>Chemistry Overall: 100% A+ Goal</span>
+          <span id="chemOverallText">0%</span>
+        </div>
+        <div class="progress-bar-outer">
+          <div class="progress-bar-inner" id="chemOverallBar"></div>
+          <div class="progress-bar-text" id="chemOverallPercent">0%</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Physics Section -->
+    <div class="subject-group">
+      <h4>⚡ Physics Progress</h4>
+      <div class="progress-item">
+        <div class="progress-label-container">
+          <span>Physics 1000 questions</span>
+          <div class="progress-controls">
+            <button class="step-btn" onclick="adjustManual('phyQuestionsManual', -5)">−</button>
+            <input type="number" id="phyQuestionsManual" min="0" max="1000" value="0" onchange="updateProgressBars()">
+            <button class="step-btn" onclick="adjustManual('phyQuestionsManual', 5)">+</button>
+            <span id="phyQuestionsText">0 / 1000 Questions</span>
+          </div>
+        </div>
+        <div class="progress-bar-outer">
+          <div class="progress-bar-inner" id="phyQuestionsBar"></div>
+          <div class="progress-bar-text" id="phyQuestionsPercent">0%</div>
+        </div>
+      </div>
+
+      <div class="progress-item">
+        <div class="progress-label-container">
+          <span>70 videos</span>
+          <div class="progress-controls">
+            <button class="step-btn" onclick="adjustManual('phyVideosManual', -1)">−</button>
+            <input type="number" id="phyVideosManual" min="0" max="70" value="0" onchange="updateProgressBars()">
+            <button class="step-btn" onclick="adjustManual('phyVideosManual', 1)">+</button>
+            <span id="phyVideosText">0 / 70 Videos</span>
+          </div>
+        </div>
+        <div class="progress-bar-outer">
+          <div class="progress-bar-inner" id="phyVideosBar"></div>
+          <div class="progress-bar-text" id="phyVideosPercent">0%</div>
+        </div>
+      </div>
+
+      <div class="progress-item overall-bar">
+        <div class="progress-label-container">
+          <span>Physics Overall: 100% A+ Goal</span>
+          <span id="phyOverallText">0%</span>
+        </div>
+        <div class="progress-bar-outer">
+          <div class="progress-bar-inner" id="phyOverallBar"></div>
+          <div class="progress-bar-text" id="phyOverallPercent">0%</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Final Main Master Progress Bar -->
+    <div class="main-bar">
+      <h3>🏆 Medicine select 100% sure</h3>
+      <div class="progress-item">
+        <div class="progress-label-container">
+          <span>Overall Master Progress</span>
+          <span id="mainOverallText">0%</span>
+        </div>
+        <div class="progress-bar-outer" style="height: 28px;">
+          <div class="progress-bar-inner" id="mainOverallBar"></div>
+          <div class="progress-bar-text" id="mainOverallPercent" style="font-size: 13px;">0%</div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <script>
+    let marksChart;
+    const totalDays = 365;
+    const totalWorks = 20;
+
+    /* Countdown Clock Logic Target linked to 365 days from startDate */
+    const startDate = new Date(2026, 7, 1); // August 1, 2026
+    const endDate = new Date(startDate);
+    endDate.setDate(startDate.getDate() + totalDays);
+
+    function updateCountdownClock() {
+      const now = new Date();
+      const remainingTime = endDate - now;
+
+      if (remainingTime <= 0) {
+        document.getElementById('days').textContent = '0';
+        document.getElementById('hours').textContent = '00';
+        document.getElementById('minutes').textContent = '00';
+        document.getElementById('seconds').textContent = '00';
+        document.getElementById('milliseconds').textContent = '000';
+        return;
+      }
+
+      const days = Math.floor(remainingTime / (1000 * 60 * 60 * 24));
+      const hours = Math.floor((remainingTime / (1000 * 60 * 60)) % 24);
+      const minutes = Math.floor((remainingTime / (1000 * 60)) % 60);
+      const seconds = Math.floor((remainingTime / 1000) % 60);
+      const milliseconds = Math.floor(remainingTime % 1000);
+
+      document.getElementById('days').textContent = days;
+      document.getElementById('hours').textContent = String(hours).padStart(2, '0');
+      document.getElementById('minutes').textContent = String(minutes).padStart(2, '0');
+      document.getElementById('seconds').textContent = String(seconds).padStart(2, '0');
+      document.getElementById('milliseconds').textContent = String(milliseconds).padStart(3, '0');
+    }
+
+    setInterval(updateCountdownClock, 10);
+
+    const workLabels = [
+      "Biology 1 page",            // Work 1 (Index 0)
+      "Physics 5 questions",       // Work 2 (Index 1)
+      "Chemistry 5 questions",     // Work 3 (Index 2)
+      "5 left arm overs",          // Work 4
+      "5 right arm overs",         // Work 5
+      "50 shots",                  // Work 6
+      "50 catches",                // Work 7
+      "10 minutes visualization",  // Work 8
+      "10 minutes meditation",     // Work 9
+      "1 Book page",               // Work 10
+      "10 minutes skipping",       // Work 11
+      "100 push ups",              // Work 12
+      "20 pull ups",               // Work 13
+      "Dumbbell flys 25 side",     // Work 14
+      "Dumbbell flys front 25",    // Work 15
+      "Military pull ups 10",      // Work 16
+      "Barbell curl 10",           // Work 17
+      "Planning",                  // Work 18
+      "Good work",                 // Work 19
+      "Extra work"                 // Work 20
+    ];
+
+    const workMarks = [
+      10, 10, 10, 5, 5, 2.5, 2.5, 2.5, 10, 5, 
+      2.5, 5, 2.5, 2.5, 2.5, 2.5, 2.5, 10, 5, 2.5
+    ];
+
+    const daysArray = [];
+    const dateObjects = [];
+
+    const today = new Date();
+    today.setHours(0,0,0,0);
+
+    for (let i = 0; i < totalDays; i++) {
+      const currentDate = new Date(startDate);
+      currentDate.setDate(startDate.getDate() + i);
+      dateObjects.push(new Date(currentDate));
+
+      const yearNum = currentDate.getFullYear();
+      const monthName = currentDate.toLocaleString('en-US', { month: 'long' });
+      const dayNum = currentDate.getDate();
+      const dayName = currentDate.toLocaleString('en-US', { weekday: 'long' });
+
+      daysArray.push(`${yearNum} ${monthName} ${dayNum} ${dayName}`);
+    }
+    
+    let savedData = JSON.parse(localStorage.getItem('trackerData')) || {};
+    let savedCrossedDays = JSON.parse(localStorage.getItem('crossedDaysData')) || {};
+    let savedManualProgress = JSON.parse(localStorage.getItem('manualProgressData')) || {
+      bioPages: 0,
+      bioEssays: 0,
+      chemQuestions: 0,
+      chemVideos: 0,
+      phyQuestions: 0,
+      phyVideos: 0
+    };
+
+    document.addEventListener("DOMContentLoaded", function() {
+      // Restore manual inputs
+      document.getElementById('bioPagesManual').value = savedManualProgress.bioPages || 0;
+      document.getElementById('bioEssaysManual').value = savedManualProgress.bioEssays || 0;
+      document.getElementById('chemQuestionsManual').value = savedManualProgress.chemQuestions || 0;
+      document.getElementById('chemVideosManual').value = savedManualProgress.chemVideos || 0;
+      document.getElementById('phyQuestionsManual').value = savedManualProgress.phyQuestions || 0;
+      document.getElementById('phyVideosManual').value = savedManualProgress.phyVideos || 0;
+
+      const marksData = new Array(totalDays).fill(0);
+
+      // Safe Chart setup
+      const canvasElem = document.getElementById('marksChart');
+      const ctx = canvasElem.getContext('2d');
+      
+      marksChart = new Chart(ctx, {
+        type: 'line',
+        data: {
+          labels: daysArray,
+          datasets: [{
+            label: 'Total Marks',
+            data: marksData,
+            borderColor: '#007bff',
+            backgroundColor: 'rgba(0, 123, 255, 0.1)',
+            borderWidth: 2,
+            fill: true,
+            tension: 0.1,
+            pointRadius: 1.5,
+            pointHoverRadius: 5
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          resizeDelay: 100,
+          scales: {
+            y: { min: 0, max: 100, title: { display: true, text: 'Marks (0 - 100)' } },
+            x: { title: { display: true, text: 'Dates (365 Days)' } }
+          }
+        }
+      });
+
+      // Populate Table
+      const tableBody = document.getElementById('trackerTableBody');
+
+      for (let day = 1; day <= totalDays; day++) {
+        const dayIndex = day - 1;
+        const thisDate = dateObjects[dayIndex];
+        
+        // Lock checkboxes for past days starting from Aug 3, 2026 onwards
+        const isPastDay = thisDate.getTime() < today.getTime();
+        const isAug3OrLater = thisDate >= new Date(2026, 7, 3);
+        const isLockedDay = isPastDay && isAug3OrLater;
+
+        const row = document.createElement('tr');
+
+        let worksHtml = '<div class="works-grid">';
+        for (let w = 1; w <= totalWorks; w++) {
+          const isChecked = savedData[dayIndex] && savedData[dayIndex][w - 1] ? 'checked' : '';
+          const labelName = workLabels[w - 1];
+          const pts = workMarks[w - 1];
+          const disabledAttr = isLockedDay ? 'disabled' : '';
+
+          worksHtml += `
+            <div class="work-item">
+              <span class="title">${labelName}</span>
+              <span class="pts">+${pts}m</span>
+              <input type="checkbox" class="day-${dayIndex}" data-pts="${pts}" ${isChecked} ${disabledAttr} onchange="calculateMarks(${dayIndex})">
+            </div>`;
+        }
+        worksHtml += '</div>';
+
+        row.innerHTML = `
+          <td class="date-label"><strong>${daysArray[dayIndex]}</strong></td>
+          <td>${worksHtml}</td>
+          <td class="score-cell" id="score-day-${dayIndex}">0</td>
+        `;
+
+        tableBody.appendChild(row);
+        calculateMarks(dayIndex, false, false);
+      }
+
+      marksChart.update();
+
+      // Populate 365 Round Badges
+      const daysGrid = document.getElementById('daysGrid');
+
+      for (let i = 0; i < totalDays; i++) {
+        const dayNum = i + 1;
+        const thisDate = dateObjects[i];
+        
+        const monthShort = thisDate.toLocaleString('en-US', { month: 'short' });
+        const dayVal = thisDate.getDate();
+        const yearVal = thisDate.getFullYear();
+
+        const badge = document.createElement('div');
+        badge.className = 'day-badge';
+
+        const isManuallyCrossed = savedCrossedDays[i];
+        const isAutoCrossed = (savedCrossedDays[i] === undefined) && (thisDate < today);
+
+        if (isManuallyCrossed || isAutoCrossed) {
+          badge.classList.add('crossed');
+          savedCrossedDays[i] = true;
+        }
+
+        if (thisDate.getTime() === today.getTime()) {
+          badge.classList.add('today');
+        }
+
+        badge.innerHTML = `
+          <div class="day-num">Day ${dayNum}</div>
+          <div class="day-date">${monthShort} ${dayVal}<br>${yearVal}</div>
+        `;
+
+        badge.onclick = function() {
+          if (badge.classList.contains('crossed')) {
+            badge.classList.remove('crossed');
+            savedCrossedDays[i] = false;
+          } else {
+            badge.classList.add('crossed');
+            savedCrossedDays[i] = true;
+          }
+          localStorage.setItem('crossedDaysData', JSON.stringify(savedCrossedDays));
+        };
+
+        daysGrid.appendChild(badge);
+      }
+
+      updateProgressBars();
+      updateStrikerBalls();
+    });
+
+    function calculateMarks(dayIndex, updateChart = true, updateProgress = true) {
+      const checkboxes = document.querySelectorAll(`.day-${dayIndex}`);
+      let totalDayMarks = 0;
+      let dayState = [];
+
+      checkboxes.forEach((cb) => {
+        const pts = parseFloat(cb.getAttribute('data-pts'));
+        if (cb.checked) {
+          totalDayMarks += pts;
+        }
+        dayState.push(cb.checked);
+      });
+
+      const formattedMarks = Number.isInteger(totalDayMarks) ? totalDayMarks : totalDayMarks.toFixed(1);
+
+      const scoreElem = document.getElementById(`score-day-${dayIndex}`);
+      if (scoreElem) scoreElem.innerText = formattedMarks;
+
+      if (marksChart && marksChart.data && marksChart.data.datasets[0]) {
+        marksChart.data.datasets[0].data[dayIndex] = totalDayMarks;
+        if (updateChart) {
+          marksChart.update();
+        }
+      }
+
+      savedData[dayIndex] = dayState;
+      localStorage.setItem('trackerData', JSON.stringify(savedData));
+
+      if (updateProgress) {
+        updateProgressBars();
+      }
+      updateStrikerBalls();
+    }
+
+    function updateStrikerBalls() {
+      const container = document.getElementById('strikerContainer');
+      const streakNumElem = document.getElementById('consecutiveStreakNum');
+      container.innerHTML = '';
+
+      let currentConsecutiveStreak = 0;
+      let tempStreak = 0;
+
+      // Find current day index
+      let activeDayIdx = 0;
+      for (let i = 0; i < totalDays; i++) {
+        if (dateObjects[i].getTime() <= today.getTime()) {
+          activeDayIdx = i;
+        }
+      }
+
+      // Calculate Consecutive Streak backwards from today
+      for (let i = activeDayIdx; i >= 0; i--) {
+        const dayState = savedData[i];
+        const isComplete = dayState && dayState[0] && dayState[1] && dayState[2];
+        
+        if (isComplete) {
+          tempStreak++;
+        } else {
+          // Allow current today to remain pending without resetting past streak
+          if (i === activeDayIdx && !isComplete) {
+            continue;
+          }
+          break;
+        }
+      }
+      currentConsecutiveStreak = tempStreak;
+      streakNumElem.innerText = currentConsecutiveStreak;
+
+      // Render Striker Balls across all 365 Days
+      for (let i = 0; i < totalDays; i++) {
+        const thisDate = dateObjects[i];
+        const monthShort = thisDate.toLocaleString('en-US', { month: 'short' });
+        const dayVal = thisDate.getDate();
+        const yearVal = thisDate.getFullYear();
+
+        const dayState = savedData[i];
+        // Core daily tasks: Bio 1 Page (Index 0), Phys 5 Qs (Index 1), Chem 5 Qs (Index 2)
+        const isComplete = dayState && dayState[0] && dayState[1] && dayState[2];
+        const isPastDay = thisDate.getTime() < today.getTime();
+        const isAug3OrLater = thisDate >= new Date(2026, 7, 3);
+
+        const ballItem = document.createElement('div');
+        ballItem.className = 'striker-ball-item';
+
+        // Automatic control logic for days starting Aug 3, 2026 onwards when day is over
+        if (isPastDay && isAug3OrLater) {
+          if (isComplete) {
+            // Automatically ignited when core tasks were completed
+            ballItem.innerHTML = `
+              <div class="striker-ball active">
+                <div class="status-icon">✓</div>
+                <div class="date-text">${dayVal} ${monthShort}<br>${yearVal}</div>
+              </div>
+            `;
+          } else {
+            // Automatically turned into Ice Ball when core tasks were missed
+            ballItem.innerHTML = `
+              <div class="striker-ball missed">
+                <div class="status-icon">🧊</div>
+                <div class="date-text">${dayVal} ${monthShort}<br>${yearVal}</div>
+              </div>
+            `;
+          }
+        } else {
+          // Standard real-time rendering for today, future days, or Aug 1/2
+          if (isComplete) {
+            ballItem.innerHTML = `
+              <div class="striker-ball active">
+                <div class="status-icon">✓</div>
+                <div class="date-text">${dayVal} ${monthShort}<br>${yearVal}</div>
+              </div>
+            `;
+          } else if (isPastDay) {
+            ballItem.innerHTML = `
+              <div class="striker-ball missed">
+                <div class="status-icon">🧊</div>
+                <div class="date-text">${dayVal} ${monthShort}<br>${yearVal}</div>
+              </div>
+            `;
+          } else {
+            ballItem.innerHTML = `
+              <div class="striker-ball pending">
+                <div class="status-icon">○</div>
+                <div class="date-text">${dayVal} ${monthShort}<br>${yearVal}</div>
+              </div>
+            `;
+          }
+        }
+
+        container.appendChild(ballItem);
+      }
+    }
+
+    function adjustManual(inputId, step) {
+      const input = document.getElementById(inputId);
+      const min = parseInt(input.getAttribute('min')) || 0;
+      const max = parseInt(input.getAttribute('max')) || 99999;
+      let currentVal = parseInt(input.value) || 0;
+
+      currentVal += step;
+      if (currentVal < min) currentVal = min;
+      if (currentVal > max) currentVal = max;
+
+      input.value = currentVal;
+      updateProgressBars();
+    }
+
+    function updateProgressBars() {
+      let totalBioPageChecks = 0;
+      let totalPhyQuestionChecks = 0;
+      let totalChemQuestionChecks = 0;
+
+      Object.values(savedData).forEach((dayState) => {
+        if (dayState[0]) totalBioPageChecks += 1;
+        if (dayState[1]) totalPhyQuestionChecks += 5;
+        if (dayState[2]) totalChemQuestionChecks += 5;
+      });
+
+      const bioManual = parseInt(document.getElementById('bioPagesManual').value) || 0;
+      const bioEssaysManual = parseInt(document.getElementById('bioEssaysManual').value) || 0;
+
+      const chemManual = parseInt(document.getElementById('chemQuestionsManual').value) || 0;
+      const chemVideosManual = parseInt(document.getElementById('chemVideosManual').value) || 0;
+
+      const phyManual = parseInt(document.getElementById('phyQuestionsManual').value) || 0;
+      const phyVideosManual = parseInt(document.getElementById('phyVideosManual').value) || 0;
+
+      localStorage.setItem('manualProgressData', JSON.stringify({
+        bioPages: bioManual,
+        bioEssays: bioEssaysManual,
+        chemQuestions: chemManual,
+        chemVideos: chemVideosManual,
+        phyQuestions: phyManual,
+        phyVideos: phyVideosManual
+      }));
+
+      // Biology Pages
+      const totalBioPages = Math.min(551, totalBioPageChecks + bioManual);
+      const bioPagesPct = Math.min(100, ((totalBioPages / 551) * 100)).toFixed(1);
+      document.getElementById('bioPagesBar').style.width = `${bioPagesPct}%`;
+      document.getElementById('bioPagesText').innerText = `${totalBioPages} / 551 Pages`;
+      document.getElementById('bioPagesPercent').innerText = bioPagesPct >= 100 ? '100% A+' : `${bioPagesPct}%`;
+
+      // Biology Essays
+      const totalBioEssays = Math.min(200, bioEssaysManual);
+      const bioEssaysPct = Math.min(100, ((totalBioEssays / 200) * 100)).toFixed(1);
+      document.getElementById('bioEssaysBar').style.width = `${bioEssaysPct}%`;
+      document.getElementById('bioEssaysText').innerText = `${totalBioEssays} / 200 Essays`;
+      document.getElementById('bioEssaysPercent').innerText = `${bioEssaysPct}%`;
+
+      // Biology Overall
+      const bioOverallPct = ((parseFloat(bioPagesPct) + parseFloat(bioEssaysPct)) / 2).toFixed(1);
+      document.getElementById('bioOverallBar').style.width = `${bioOverallPct}%`;
+      document.getElementById('bioOverallText').innerText = bioOverallPct >= 100 ? '100% A+' : `${bioOverallPct}%`;
+      document.getElementById('bioOverallPercent').innerText = bioOverallPct >= 100 ? '100% A+' : `${bioOverallPct}%`;
+
+      // Chemistry Questions
+      const totalChemQuestions = Math.min(1000, totalChemQuestionChecks + chemManual);
+      const chemQuestionsPct = Math.min(100, ((totalChemQuestions / 1000) * 100)).toFixed(1);
+      document.getElementById('chemQuestionsBar').style.width = `${chemQuestionsPct}%`;
+      document.getElementById('chemQuestionsText').innerText = `${totalChemQuestions} / 1000 Questions`;
+      document.getElementById('chemQuestionsPercent').innerText = `${chemQuestionsPct}%`;
+
+      // Chemistry Videos
+      const totalChemVideos = Math.min(50, chemVideosManual);
+      const chemVideosPct = Math.min(100, ((totalChemVideos / 50) * 100)).toFixed(1);
+      document.getElementById('chemVideosBar').style.width = `${chemVideosPct}%`;
+      document.getElementById('chemVideosText').innerText = `${totalChemVideos} / 50 Videos`;
+      document.getElementById('chemVideosPercent').innerText = `${chemVideosPct}%`;
+
+      // Chemistry Overall
+      const chemOverallPct = ((parseFloat(chemQuestionsPct) + parseFloat(chemVideosPct)) / 2).toFixed(1);
+      document.getElementById('chemOverallBar').style.width = `${chemOverallPct}%`;
+      document.getElementById('chemOverallText').innerText = chemOverallPct >= 100 ? '100% A+' : `${chemOverallPct}%`;
+      document.getElementById('chemOverallPercent').innerText = chemOverallPct >= 100 ? '100% A+' : `${chemOverallPct}%`;
+
+      // Physics Questions
+      const totalPhyQuestions = Math.min(1000, totalPhyQuestionChecks + phyManual);
+      const phyQuestionsPct = Math.min(100, ((totalPhyQuestions / 1000) * 100)).toFixed(1);
+      document.getElementById('phyQuestionsBar').style.width = `${phyQuestionsPct}%`;
+      document.getElementById('phyQuestionsText').innerText = `${totalPhyQuestions} / 1000 Questions`;
+      document.getElementById('phyQuestionsPercent').innerText = `${phyQuestionsPct}%`;
+
+      // Physics Videos
+      const totalPhyVideos = Math.min(70, phyVideosManual);
+      const phyVideosPct = Math.min(100, ((totalPhyVideos / 70) * 100)).toFixed(1);
+      document.getElementById('phyVideosBar').style.width = `${phyVideosPct}%`;
+      document.getElementById('phyVideosText').innerText = `${totalPhyVideos} / 70 Videos`;
+      document.getElementById('phyVideosPercent').innerText = `${phyVideosPct}%`;
+
+      // Physics Overall
+      const phyOverallPct = ((parseFloat(phyQuestionsPct) + parseFloat(phyVideosPct)) / 2).toFixed(1);
+      document.getElementById('phyOverallBar').style.width = `${phyOverallPct}%`;
+      document.getElementById('phyOverallText').innerText = phyOverallPct >= 100 ? '100% A+' : `${phyOverallPct}%`;
+      document.getElementById('phyOverallPercent').innerText = phyOverallPct >= 100 ? '100% A+' : `${phyOverallPct}%`;
+
+      // Master Progress
+      const mainOverallPct = ((parseFloat(bioOverallPct) + parseFloat(chemOverallPct) + parseFloat(phyOverallPct)) / 3).toFixed(1);
+
+      document.getElementById('mainOverallBar').style.width = `${mainOverallPct}%`;
+      document.getElementById('mainOverallText').innerText = `${mainOverallPct}%`;
+      document.getElementById('mainOverallPercent').innerText = mainOverallPct >= 100 ? '100% Medicine Select Confirmed! 🎉' : `${mainOverallPct}%`;
+    }
+
+    function resetData() {
+      if (confirm("Are you sure you want to reset all your tracked data, manual progress, and crossed days?")) {
+        localStorage.removeItem('trackerData');
+        localStorage.removeItem('crossedDaysData');
+        localStorage.removeItem('manualProgressData');
+        location.reload();
+      }
+    }
+  </script>
+
+</body>
+</html>
